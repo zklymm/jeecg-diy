@@ -39,6 +39,22 @@
 			<artifactId>jeewx-api</artifactId>
 			<version>1.4.2</version>
 		</dependency>
+		<dependency>
+			<groupId>us.codecraft</groupId>
+			<artifactId>webmagic-core</artifactId>
+			<version>0.7.4</version>
+		</dependency>
+		<dependency>
+			<groupId>us.codecraft</groupId>
+			<artifactId>webmagic-extension</artifactId>
+			<version>0.7.4</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>jedis</artifactId>
+					<groupId>redis.clients</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<dependency>
 			<groupId>org.jeecgframework.boot</groupId>
@@ -55,6 +71,16 @@
 					<artifactId>autopoi-web</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>us.codecraft</groupId>
+			<artifactId>webmagic-extension</artifactId>
+			<version>0.7.3</version>
+		</dependency>
+		<dependency>
+			<groupId>us.codecraft</groupId>
+			<artifactId>webmagic-core</artifactId>
+			<version>0.7.3</version>
 		</dependency>
 	</dependencies>
 
