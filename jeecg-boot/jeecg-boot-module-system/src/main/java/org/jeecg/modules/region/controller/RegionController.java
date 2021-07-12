@@ -145,7 +145,21 @@ public class RegionController extends JeecgController<Region, IRegionService> {
 		return Result.OK(region);
 	}
 
-    /**
+	 /**
+	  * test
+	  *
+	  * @return
+	  */
+	 @AutoLog(value = "行政区划-测试")
+	 @ApiOperation(value="行政区划-测试", notes="行政区划-测试")
+	 @GetMapping(value = "/test")
+	 public Result<?> test() {
+		 regionService.updateRegionFillInfo();
+		 return Result.OK();
+	 }
+
+
+	 /**
     * 导出excel
     *
     * @param request
