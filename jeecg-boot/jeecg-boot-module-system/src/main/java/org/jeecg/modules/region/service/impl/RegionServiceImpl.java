@@ -2,9 +2,9 @@ package org.jeecg.modules.region.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.jeecg.modules.region.entity.Region;
 import org.jeecg.modules.region.mapper.RegionMapper;
@@ -34,8 +34,8 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, Region> impleme
     @Override
     public String updateRegionFillInfo() {
         LambdaQueryWrapper<Region> wrapper = new LambdaQueryWrapper<>();
+        List<Region> saveList = new ArrayList<>();
         Arrays.stream(proviceRegionCode).forEach(item->{
-            List<Region> saveList = new ArrayList<>();
             wrapper.likeRight(Region::getRegionCode, item);
             wrapper.eq(Region::getYear, "2019");
             List<Region> list = super.list(wrapper);
@@ -46,10 +46,10 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, Region> impleme
                 String countyCode = regionCode.substring(4,6);
                 String townCode = regionCode.substring(6,9);
                 List<Region> filterList = list.stream().filter(regionItem ->
-                        (regionItem.getRegionType() == 1 && regionCode.contains(proviceCode)) ||
-                        (regionItem.getRegionType() == 2 && regionCode.contains(cityCode)) ||
-                        (regionItem.getRegionType() == 3 && regionCode.contains(countyCode)) ||
-                        (regionItem.getRegionType() == 4 && regionCode.contains(townCode)))
+                        (regionItem.getRegionType() == 1 && regionItem.getRegionCode().substring(0,2).equals(proviceCode)) ||
+                        (regionItem.getRegionType() == 2 && regionItem.getRegionCode().substring(2,4).equals(cityCode)) ||
+                        (regionItem.getRegionType() == 3 && regionItem.getRegionCode().substring(4,6).equals(countyCode)) ||
+                        (regionItem.getRegionType() == 4 && regionItem.getRegionCode().substring(6,9).equals(townCode)))
                         .sorted(Comparator.comparing(Region::getRegionType)).collect(Collectors.toList());
                 List<Region> proviceList = filterList.stream().filter(regionItem -> 1 == regionItem.getRegionType()).collect(Collectors.toList());
                 List<Region> cityList = filterList.stream().filter(regionItem -> 2 == regionItem.getRegionType()).collect(Collectors.toList());
@@ -77,7 +77,11 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, Region> impleme
                 saveList.add(region);
             }
             System.out.println(saveList);
+            wrapper.clear();
         });
+        System.out.println(saveList);
+        System.out.println(saveList.size());
+
         return null;
     }
 
@@ -88,10 +92,11 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, Region> impleme
         String result = HttpUtil.get(gaoUrl, param);
         JSONObject jsonObject = JSONUtil.parseObj(result);
         JSONArray geocodes = (JSONArray)jsonObject.get("geocodes");
-        Iterator<Object> iterator = geocodes.stream().iterator();
-        Map map = (Map) iterator.next();
-        String[] str = map.get("location").toString().split(",");
-        System.out.println(str[1]);
+        String[] str = new String[2];
+        if(geocodes != null && geocodes.size() >0){
+            String location = ((JSONObject) geocodes.get(0)).get("location").toString();
+            str = location.split(StrUtil.COMMA);
+        }
         return str;
     }
 }

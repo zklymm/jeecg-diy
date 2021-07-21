@@ -9,7 +9,6 @@ import us.codecraft.webmagic.scheduler.RedisPriorityScheduler;
  */
 public class GovRegionSpiderScheduler extends RedisPriorityScheduler {
 
-
     public GovRegionSpiderScheduler(String host) {
         super(host);
     }

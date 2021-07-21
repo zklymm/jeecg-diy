@@ -12,6 +12,7 @@ import org.jeecg.modules.region.entity.Region;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author zk
@@ -25,16 +26,21 @@ public class GovRegionSpiderPipeline implements Pipeline {
     public void process(ResultItems resultItems, Task task) {
         for (Map.Entry<String, Object> entry : resultItems.getAll().entrySet()) {
             List<Region> list = (List<Region>) entry.getValue();
-            for(Region region:list){
-                LambdaQueryWrapper<Region> wrapper = new LambdaQueryWrapper<>();
-                wrapper.eq(Region::getRegionCode,region.getRegionCode());
-                List<Region> list1 = regionService.list(wrapper);
-                if(CollUtil.isNotEmpty(list1)){
-                    regionService.update(region,wrapper);
-                }else {
-                    regionService.save(region);
+            List<String> collect = list.stream().map(Region::getRegionCode).collect(Collectors.toList());
+            LambdaQueryWrapper<Region> wrapper = new LambdaQueryWrapper<>();
+            wrapper.in(Region::getRegionCode, collect);
+            List<Region> oldList = regionService.list(wrapper);
+            // 更新数据
+            List<Region> updateList = list.stream().filter(item -> oldList.stream().anyMatch(e -> e.getRegionCode().equals(item.getRegionCode()))).collect(Collectors.toList());
+            updateList.stream().forEach(item-> oldList.stream().forEach(e->{
+                if(e.getRegionCode().equals(item.getRegionCode())){
+                    item.setId(e.getId());
                 }
-            }
+            }));
+            // 新增数据
+            List<Region> insertList = list.stream().filter(item -> updateList.stream().allMatch(e -> !e.getRegionCode().equals(item.getRegionCode()))).collect(Collectors.toList());
+            regionService.updateBatchById(updateList);
+            regionService.saveBatch(insertList);
         }
     }
 }
