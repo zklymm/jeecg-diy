@@ -9,9 +9,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.jeecg.modules.region.entity.Region;
 import org.jeecg.modules.region.mapper.RegionMapper;
 import org.jeecg.modules.region.service.IRegionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,26 +33,25 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, Region> impleme
 
     private final String gaoUrl = "https://restapi.amap.com/v3/geocode/geo";
     private final String gaoKey = "4138c1cea719cc344b6c876825079684";
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public String updateRegionFillInfo() {
         LambdaQueryWrapper<Region> wrapper = new LambdaQueryWrapper<>();
-        List<Region> saveList = new ArrayList<>();
         Arrays.stream(proviceRegionCode).forEach(item->{
+            List<Region> regions = new ArrayList<>();
             wrapper.likeRight(Region::getRegionCode, item);
             wrapper.eq(Region::getYear, "2019");
             List<Region> list = super.list(wrapper);
             for(Region region:list){
-                String regionCode = region.getRegionCode();
-                String proviceCode = regionCode.substring(0,2);
-                String cityCode = regionCode.substring(2,4);
-                String countyCode = regionCode.substring(4,6);
-                String townCode = regionCode.substring(6,9);
+                String[] parentPathArray = region.getParentPath() == null ?new String[]{}:region.getParentPath().split(StrUtil.COMMA);
+                if(parentPathArray.length < 1){
+                    logger.warn("error data {}", region);
+                    continue;
+                }
                 List<Region> filterList = list.stream().filter(regionItem ->
-                        (regionItem.getRegionType() == 1 && regionItem.getRegionCode().substring(0,2).equals(proviceCode)) ||
-                        (regionItem.getRegionType() == 2 && regionItem.getRegionCode().substring(2,4).equals(cityCode)) ||
-                        (regionItem.getRegionType() == 3 && regionItem.getRegionCode().substring(4,6).equals(countyCode)) ||
-                        (regionItem.getRegionType() == 4 && regionItem.getRegionCode().substring(6,9).equals(townCode)))
+                        Arrays.stream(parentPathArray).allMatch(parentItem->parentItem.equals(regionItem.getRegionCode())))
                         .sorted(Comparator.comparing(Region::getRegionType)).collect(Collectors.toList());
                 List<Region> proviceList = filterList.stream().filter(regionItem -> 1 == regionItem.getRegionType()).collect(Collectors.toList());
                 List<Region> cityList = filterList.stream().filter(regionItem -> 2 == regionItem.getRegionType()).collect(Collectors.toList());
@@ -59,29 +61,29 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, Region> impleme
                 region.setParentPathName(parentPathName);
                 switch (region.getRegionType()){
                     case 5:
-                        region.setTownName(townList.stream().findFirst().get().getRegionName());
+                        region.setTownName(townList.stream().findFirst().orElse(new Region()).getRegionName());
                     case 4:
-                        region.setCountyName(countyList.stream().findFirst().get().getRegionName());
+                        region.setCountyName(countyList.stream().findFirst().orElse(new Region()).getRegionName());
                     case 3:
-                        region.setCityName(cityList.stream().findFirst().get().getRegionName());
+                        region.setCityName(cityList.stream().findFirst().orElse(new Region()).getRegionName());
                     case 2:
-                        region.setProviceName(proviceList.stream().findFirst().get().getRegionName());
+                        region.setProviceName(proviceList.stream().findFirst().orElse(new Region()).getRegionName());
                     case 1:
                         break;
                 }
                 if(region.getRegionType() < 4){
                     String[] itude = getItude(parentPathName);
-                    region.setLongitude(itude[0]);
-                    region.setLatitude(itude[1]);
+                    if(itude.length > 0){
+                        region.setLongitude(itude[0]);
+                        region.setLatitude(itude[1]);
+                    }
                 }
-                saveList.add(region);
+                regions.add(region);
             }
-            System.out.println(saveList);
-            wrapper.clear();
+            logger.info("完善了{}条数据!",regions.size());
+            boolean b = updateBatchById(regions);
+            logger.info("是否完成数据库更新？{}", b);
         });
-        System.out.println(saveList);
-        System.out.println(saveList.size());
-
         return null;
     }
 

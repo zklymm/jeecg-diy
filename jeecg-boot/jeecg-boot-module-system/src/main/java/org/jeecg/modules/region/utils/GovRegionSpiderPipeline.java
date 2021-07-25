@@ -1,9 +1,9 @@
 package org.jeecg.modules.region.utils;
 
-import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import us.codecraft.webmagic.ResultItems;
 import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.pipeline.Pipeline;
@@ -23,6 +23,7 @@ public class GovRegionSpiderPipeline implements Pipeline {
     private IRegionService regionService;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void process(ResultItems resultItems, Task task) {
         for (Map.Entry<String, Object> entry : resultItems.getAll().entrySet()) {
             List<Region> list = (List<Region>) entry.getValue();

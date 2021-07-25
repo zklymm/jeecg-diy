@@ -11,7 +11,7 @@ import java.util.*;
 @Component
 public class GovRegionSpiderUtils implements PageProcessor {
     // 部分一：抓取网站的相关配置，包括编码、抓取间隔、重试次数等
-    private Site site = Site.me().setCharset("gbk").setRetryTimes(10).setSleepTime(30000).setTimeOut(60000);
+    private Site site = Site.me().setCharset("gbk").setRetryTimes(10).setSleepTime(10000).setTimeOut(60000);
 
     private String year = "2019";
 
@@ -45,9 +45,8 @@ public class GovRegionSpiderUtils implements PageProcessor {
                 entity.setRegionType(1);
                 entity.setProviceName(provNameList.get(i));
                 entity.setYear(year);
-//                String[] itude = getItude(provNameList.get(i));
-//                entity.setLongitude(itude[0]);
-//                entity.setLatitude(itude[1]);
+                entity.setParentCode("0");
+                entity.setParentPath(provCodeList.get(i).substring(0,provCodeList.get(i).indexOf("."))+"0000000000");
                 list.add(entity);
             }
         }else if(cityNameList.size()>0 && cityCodeList.size()>0){
@@ -61,13 +60,9 @@ public class GovRegionSpiderUtils implements PageProcessor {
                 entity.setRegionName(cityNameList.get(i));
                 entity.setParentCode(proviceCode);
                 entity.setRegionType(2);
-//                entity.setProviceName(getName(proviceCode));
                 entity.setCityName(cityNameList.get(i));
-                entity.setParentPath(proviceCode);
+                entity.setParentPath(proviceCode+","+cityCodeList.get(i));
                 entity.setYear(year);
-//                String[] itude = getItude(getName(proviceCode)+cityNameList.get(i));
-//                entity.setLongitude(itude[0]);
-//                entity.setLatitude(itude[1]);
                 list.add(entity);
             }
         }else if(countyNameList.size()>0 && countyCodeList.size()>0){
@@ -83,13 +78,8 @@ public class GovRegionSpiderUtils implements PageProcessor {
                 entity.setRegionType(3);
                 entity.setParentCode(cityCode);
                 entity.setYear(year);
-//                entity.setProviceName(getName(proviceCode));
-//                entity.setCityName(getName(cityCode));
                 entity.setCountyName(countyNameList.get(i));
-                entity.setParentPath(proviceCode+","+cityCode);
-//                String[] itude = getItude(getName(proviceCode)+getName(cityCode)+countyNameList.get(i));
-//                entity.setLongitude(itude[0]);
-//                entity.setLatitude(itude[1]);
+                entity.setParentPath(proviceCode+","+cityCode+","+countyCodeList.get(i));
                 list.add(entity);
             }
         }else if(townNameList.size()>0 && townCodeList.size()>0){
@@ -106,14 +96,8 @@ public class GovRegionSpiderUtils implements PageProcessor {
                 entity.setRegionType(4);
                 entity.setParentCode(countyCode);
                 entity.setYear(year);
-//                entity.setProviceName(getName(proviceCode));
-//                entity.setCityName(getName(cityCode));
-//                entity.setCountyName(getName(countyCode));
                 entity.setTownName(townNameList.get(i));
-                entity.setParentPath(proviceCode+","+cityCode+","+countyCode);
-//                String[] itude = getItude(getName(proviceCode)+getName(cityCode)+getName(countyCode)+townNameList.get(i));
-//                entity.setLongitude(itude[0]);
-//                entity.setLatitude(itude[1]);
+                entity.setParentPath(proviceCode+","+cityCode+","+countyCode+","+townCodeList.get(i));
                 list.add(entity);
             }
         }else if(villageNameList.size()>0 && villageTypeList.size()>0 && villageCodeList.size()>0){
@@ -132,15 +116,8 @@ public class GovRegionSpiderUtils implements PageProcessor {
                 entity.setRegionType(5);
                 entity.setParentCode(townCode);
                 entity.setYear(year);
-//                entity.setProviceName(getName(proviceCode));
-//                entity.setCityName(getName(cityCode));
-//                entity.setCountyName(getName(countyCode));
-//                entity.setTownName(getName(townCode));
                 entity.setVillageName(villageNameList.get(i));
-                entity.setParentPath(proviceCode+","+cityCode+","+countyCode+","+townCode);
-//                String[] itude = getItude(getName(proviceCode)+getName(cityCode)+getName(countyCode)+getName(townCode)+villageNameList.get(i));
-//                entity.setLongitude(itude[0]);
-//                entity.setLatitude(itude[1]);
+                entity.setParentPath(proviceCode+","+cityCode+","+countyCode+","+townCode+","+villageCodeList.get(i));
                 list.add(entity);
             }
         }
@@ -149,33 +126,8 @@ public class GovRegionSpiderUtils implements PageProcessor {
         page.addTargetRequests(page.getHtml().xpath("//tr[@class='provincetr']/td/a/@href|//tr[@class='citytr']/td[1]/a/@href|//tr[@class='countytr']/td[1]/a/@href|//tr[@class='towntr']/td[1]/a/@href").all());
     }
 
-//    private String getName(String regionCode){
-//        QueryWrapper<Region> wrapper = new QueryWrapper<>();
-//        wrapper.lambda().eq(StringUtils.isNotBlank(regionCode),Region::getRegionCode,regionCode);
-//        wrapper.lambda().select(Region::getRegionName);
-//        Region entity = regionService.getOne(wrapper);
-//
-//        return entity.getRegionName();
-//    }
-//
-//    private String[] getItude(String address){
-//        Map<String,Object> param = new HashMap<>();
-//        param.put("address",address);
-//        param.put("key",gaoKey);
-//        String result = HttpUtil.get(gaoUrl, param);
-//        JSONObject jsonObject = JSONUtil.parseObj(result);
-//        JSONArray geocodes = (JSONArray)jsonObject.get("geocodes");
-//        Iterator<Object> iterator = geocodes.stream().iterator();
-//        Map map = (Map) iterator.next();
-//        String[] str = map.get("location").toString().split(",");
-//        System.out.println(str[1]);
-//        return str;
-//
-//    }
-
     @Override
     public Site getSite() {
-
-        return site.setCharset("gbk").setRetryTimes(3).setSleepTime(10000).setTimeOut(10000);
+        return site;
     }
 }
