@@ -27,7 +27,7 @@ public class RegionJob {
     @Autowired
     private IRegionService regionService;
 
-    @Scheduled(cron = "0 52 20 * * ?")
+    //    @Scheduled(cron = "0 52 20 * * ?")
     public void spiderRegion() {
         System.out.println("爬虫开始执行..........");
         Spider spider = Spider.create(govRegionSpiderUtils)
@@ -45,8 +45,8 @@ public class RegionJob {
         spider.run();
     }
 
-    @Scheduled(cron = "0 29 0 * * ?")
-    private void updateRegionFillInfo() {
-       // regionService.updateRegionFillInfo();
+    @Scheduled(cron = "0 18 9 * * ?")
+    public void updateRegionFillInfo() throws InterruptedException {
+        regionService.updateRegionFillInfo();
     }
 }

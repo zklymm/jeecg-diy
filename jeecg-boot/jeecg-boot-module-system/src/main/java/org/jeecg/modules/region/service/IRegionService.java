@@ -15,5 +15,5 @@ public interface IRegionService extends IService<Region> {
      * 填充爬取的地区数据信息
      * @return
      */
-    String updateRegionFillInfo();
+    String updateRegionFillInfo() throws InterruptedException;
 }
