@@ -16,4 +16,10 @@ public interface IRegionService extends IService<Region> {
      * @return
      */
     String updateRegionFillInfo() throws InterruptedException;
+
+    /**
+     * 生成静态页面
+     * @return
+     */
+    String generateHtml();
 }

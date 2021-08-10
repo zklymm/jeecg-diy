@@ -45,8 +45,13 @@ public class RegionJob {
         spider.run();
     }
 
-    @Scheduled(cron = "0 18 9 * * ?")
+//    @Scheduled(cron = "0 18 9 * * ?")
     public void updateRegionFillInfo() throws InterruptedException {
         regionService.updateRegionFillInfo();
+    }
+
+    @Scheduled(cron = "0 33 16 * * ?")
+    public void generateHtml() {
+        regionService.generateHtml();
     }
 }
